@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Transaksi Penjualan</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body class="bg-light">
+
+<div class="container py-4">
+  <h1 class="mb-4 text-center">💰 Transaksi Penjualan</h1>
+
+  <!-- Form Input -->
+  <div class="card p-3 mb-4">
+    <div class="row g-2">
+      <div class="col-md">
+        <select id="produkSelect" class="form-select">
+          <option value="">Pilih Produk</option>
+        </select>
+      </div>
+      <div class="col-md">
+        <input type="number" id="jumlah" class="form-control" placeholder="Jumlah">
+      </div>
+      <div class="col-md">
+        <input type="number" id="harga" class="form-control" placeholder="Harga" readonly>
+      </div>
+      <div class="col-auto">
+        <button id="btnTambah" class="btn btn-primary" onclick="tambahKeranjang()">Tambah</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Keranjang -->
+  <h4>🛒 Keranjang</h4>
+  <table class="table table-bordered bg-white">
+    <thead>
+      <tr>
+        <th>Produk</th>
+        <th>Jumlah</th>
+        <th>Harga</th>
+        <th>Subtotal</th>
+        <th>Aksi</th>
+      </tr>
+    </thead>
+    <tbody id="keranjangList"></tbody>
+    <tfoot>
+      <tr>
+        <td colspan="3" class="text-end"><b>Total</b></td>
+        <td id="totalHarga">Rp 0</td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <!-- Tombol + Nama -->
+  <div class="d-flex align-items-center mt-3">
+    <button class="btn btn-success" onclick="simpanTransaksi()">💾 Simpan Transaksi</button>
+    <span class="ms-3 fw-bold fs-5">Gabriel Sebastian Elliman</span>
+  </div>
+</div>
+
+<script>
+  // 🔑 Ganti dengan URL & anon key dari project Supabase kamu
+  const SUPABASE_URL = "https://vzdpbaitrfooxocbhxcf.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ6ZHBiYWl0cmZvb3hvY2JoeGNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg2NzY2NjAsImV4cCI6MjA3NDI1MjY2MH0.7CwJpP10p8vvqBGys_Ycr-3nu_aaEfHmvSvkE5UaFcE";
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let keranjang = [];
+  let produkMap = {}; // untuk mapping harga berdasarkan id produk
+
+  // Escape HTML
+  function escapeHTML(str) {
+    return str.replace(/[&<>'"]/g, tag => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;'
+    }[tag]));
+  }
+
+  // Load produk dari Supabase
+  async function loadProduk() {
+    const { data, error } = await db.from("produk").select("id, nama, harga");
+    if (error) {
+      Swal.fire("Error", "Gagal memuat produk: " + error.message, "error");
+      return;
+    }
+
+    const select = document.getElementById("produkSelect");
+    select.innerHTML = `<option value="">Pilih Produk</option>`;
+    data.forEach(item => {
+      produkMap[item.id] = item; // simpan harga & nama
+      let opt = document.createElement("option");
+      opt.value = item.id;
+      opt.textContent = item.nama;
+      select.appendChild(opt);
+    });
+
+    // Event: update harga saat pilih produk
+    select.addEventListener("change", function () {
+      let id = this.value;
+      document.getElementById("harga").value = id ? produkMap[id].harga : "";
+    });
+  }
+
+  function renderKeranjang() {
+    const list = document.getElementById("keranjangList");
+    list.innerHTML = "";
+    let total = 0;
+
+    keranjang.forEach((item, index) => {
+      let subtotal = item.harga * item.jumlah;
+      total += subtotal;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${escapeHTML(item.nama)}</td>
+        <td>${item.jumlah}</td>
+        <td>Rp ${Number(item.harga).toLocaleString()}</td>
+        <td>Rp ${Number(subtotal).toLocaleString()}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="hapusItem(${index})">Hapus</button></td>
+      `;
+      list.appendChild(tr);
+    });
+
+    document.getElementById("totalHarga").textContent = "Rp " + total.toLocaleString();
+  }
+
+  function tambahKeranjang() {
+    let id = document.getElementById("produkSelect").value;
+    let jumlah = document.getElementById("jumlah").value;
+
+    if (!id || !jumlah) {
+      Swal.fire("Oops!", "Produk dan jumlah wajib diisi", "warning");
+      return;
+    }
+
+    let produk = produkMap[id];
+    keranjang.push({
+      nama: produk.nama,
+      jumlah: parseInt(jumlah),
+      harga: parseInt(produk.harga)
+    });
+
+    document.getElementById("produkSelect").value = "";
+    document.getElementById("jumlah").value = "";
+    document.getElementById("harga").value = "";
+    renderKeranjang();
+  }
+
+  function hapusItem(index) {
+    keranjang.splice(index, 1);
+    renderKeranjang();
+  }
+
+  async function simpanTransaksi() {
+    if (keranjang.length === 0) {
+      Swal.fire("Oops!", "Keranjang masih kosong", "warning");
+      return;
+    }
+
+    const { error } = await db.from("transaksi").insert([{ items: keranjang }]);
+
+    if (error) {
+      Swal.fire("Error", "Gagal menyimpan transaksi: " + error.message, "error");
+      return;
+    }
+
+    Swal.fire("Sukses", "Transaksi berhasil disimpan", "success");
+    keranjang = [];
+    renderKeranjang();
+  }
+
+  // load produk ketika halaman dibuka
+  loadProduk();
+</script>
+
+</body>
+</html>
