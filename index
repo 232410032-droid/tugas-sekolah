@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html> 
+<head> 
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loading Scrapbook</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <style>
+    body {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #fdf6f0;
+      font-family: 'Comic Sans MS', cursive;
+    }
+    .loader {
+      text-align: center;
+    }
+    .loading-text {
+      margin-top: 20px;
+      font-size: 20px;
+      color: #444;
+    }
+    .emoji {
+      font-size: 50px;
+      animation: bounce 1s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+    .progress {
+      margin-top: 20px;
+      height: 20px;
+      border-radius: 10px;
+    }
+    .my-name {
+      margin-top: 30px;
+      font-size: 26px;
+      font-weight: bold;
+      color: #333;
+      letter-spacing: 2px;
+    }
+  </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Navbar</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="#">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Link</a>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Dropdown
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#">Action</a></li>
+            <li><a class="dropdown-item" href="#">Another action</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#">Something else here</a></li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link disabled" aria-disabled="true">Disabled</a>
+        </li>
+      </ul>
+      <form class="d-flex" role="search">
+        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search"/>
+        <button class="btn btn-outline-success" type="submit">Search</button>
+      </form>
+    </div>
+  </div>
+</nav>
+  <div class="loader">
+    <!-- Ikon diganti -->
+    <div class="emoji" id="emoji">🚀</div>
+    <div class="loading-text">Membuka scrapbook kenangan...</div>
+
+    <!-- Progress bar jadi kuning (bonus A) -->
+    <div class="progress w-75 mx-auto">
+      <div id="progressBar" 
+           class="progress-bar progress-bar-striped progress-bar-animated bg-warning" 
+           role="progressbar" style="width: 0%">0%</div>
+    </div>
+
+    <!-- Nama kamu -->
+    <div class="my-name">Gabriel Sebastian Elliman</div>
+  </div>
+  
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+
+  <script>
+      
+    let progress = 0;
+    const progressBar = document.getElementById("progressBar");
+
+    // Kecepatan 2x lebih cepat (7.5 detik)
+    const duration = 7500; 
+    const interval = 150;   
+    const step = 100 / (duration / interval);
+
+    const timer = setInterval(() => {
+      progress += step;
+      if (progress >= 100) {
+        progress = 100;
+        clearInterval(timer);
+        window.location.href = "https://diep.io/","_blank"; 
+      }
+      progressBar.style.width = progress + "%";
+      progressBar.innerText = Math.floor(progress) + "%";  
+    }, interval);
+
+    // Bonus B: ganti ikon setiap kali bounce
+    const emojiElement = document.getElementById("emoji");
+    const icons = ["🚀", "🌙", "⭐", "☀️"]; // bisa pilih lebih banyak
+    let i = 0;
+    emojiElement.addEventListener("animationiteration", () => {
+      i = (i + 1) % icons.length;
+      emojiElement.textContent = icons[i];
+    });
+  </script>
+</body>
+</html>
